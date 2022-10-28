@@ -1,0 +1,26 @@
+.root {
+    -fx-background-color: #183c4a;
+    -fx-border-width: 1;
+    -fx-border-color: #2A363B;
+}
+
+.score-pane{
+    -fx-background-color: #2A363B;
+}
+
+.board-pane{
+    -fx-border-width: 50;
+    -fx-border-color: #5e5009;
+}
+
+.white-text{
+    -fx-text-fill: #FFFFFF;
+}
+
+.stack-light-green{
+    -fx-background-color:#9fa881;
+}
+
+.stack-dark-green{
+    -fx-background-color:#6f7d42;
+}
