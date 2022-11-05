@@ -2,7 +2,9 @@ package hr.reversi.model;
 
 import hr.reversi.util.DiscState;
 
-public class Disc {
+import java.io.Serializable;
+
+public class Disc implements Serializable {
     /** Position in row. */
     private Integer row;
     /** Position in column. */

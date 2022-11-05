@@ -41,12 +41,13 @@ public class StartGameController implements Initializable {
         playerOne.setDiscState(DiscState.white);
         playerOne.setName(playerOneName);
         playerOne.setPoints(0);
+
         playerTwo.setDiscState(DiscState.black);
         playerTwo.setName(playerTwoName);
         playerTwo.setPoints(0);
     }
 
-    private void showBoardView() {
+    public static void showBoardView() {
         FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("/hr/reversi/view/board-view.fxml"));
         Scene scene = null;
 

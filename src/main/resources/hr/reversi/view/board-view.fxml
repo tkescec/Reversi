@@ -5,7 +5,6 @@
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.effect.DropShadow?>
-<?import javafx.scene.effect.Light.Distant?>
 <?import javafx.scene.effect.Lighting?>
 <?import javafx.scene.effect.Shadow?>
 <?import javafx.scene.layout.AnchorPane?>
@@ -23,19 +22,19 @@
         <menus>
           <Menu mnemonicParsing="false" text="File">
                <items>
-                  <MenuItem mnemonicParsing="false" text="New Game" />
-                  <MenuItem mnemonicParsing="false" text="Save Game" />
-                  <MenuItem mnemonicParsing="false" text="Load Game" />
+                  <MenuItem fx:id="miNewGame" mnemonicParsing="false" onAction="#onNewGameButtonClick" text="New Game" />
+                  <MenuItem fx:id="miSaveGame" mnemonicParsing="false" onAction="#onSaveGameButtonClick" text="Save Game" />
+                  <MenuItem fx:id="miLoadGame" mnemonicParsing="false" onAction="#onLoadGameButtonClick" text="Load Game" />
                </items>
           </Menu>
+            <Menu mnemonicParsing="false" text="High Score">
+              <items>
+                <MenuItem fx:id="miHighScore" mnemonicParsing="false" onAction="#onHighScoreButtonClick" text="Show" />
+              </items>
+            </Menu>
           <Menu mnemonicParsing="false" text="Documentation">
             <items>
-              <MenuItem mnemonicParsing="false" text="Generate" />
-            </items>
-          </Menu>
-          <Menu mnemonicParsing="false" text="Help">
-            <items>
-              <MenuItem mnemonicParsing="false" text="About" />
+              <MenuItem fx:id="miDocumentation" mnemonicParsing="false" onAction="#onDocumentationButtonClick" text="Generate" />
             </items>
           </Menu>
         </menus>
@@ -58,7 +57,7 @@
                         <Shadow />
                      </bumpInput>
                      <light>
-                        <Light.Distant />
+<!--                        <Light.Distant />-->
                      </light>
                   </Lighting>
                </effect>
@@ -70,7 +69,7 @@
                         <Shadow />
                      </bumpInput>
                      <light>
-                        <Light.Distant />
+<!--                        <Light.Distant />-->
                      </light>
                   </Lighting>
                </effect>

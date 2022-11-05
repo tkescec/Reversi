@@ -2,9 +2,10 @@ package hr.reversi.model;
 
 import hr.reversi.util.DiscState;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Board {
+public class Board implements Serializable {
     /** Number of rows. */
     private final int rows = 8;
     /** Number of columns. */
@@ -26,7 +27,7 @@ public class Board {
 
     /**
      * Inits boardGrid with two discs for each player.
-     * All discs are initially set to -1 which translates
+     * All discs are initially set to DiscState.empty which translates
      * in view to empty square on boardGrid.
      */
     public void initBoard() {
@@ -598,7 +599,7 @@ public class Board {
      *
      * @param row row coordinates.
      * @param col column coordinates.
-     * @param currentPlayer current player turn (0 - white, 1 - black).
+     * @param currentPlayer current player turn .
      */
     public void flipVerticalDiscs(final Integer row, final Integer col,
                                   final DiscState currentPlayer) {
@@ -659,7 +660,7 @@ public class Board {
      *
      * @param rowValue row coordinates.
      * @param colValue column coordinates.
-     * @param currentPlayer current player turn (0 - white, 1 - black).
+     * @param currentPlayer current player turn .
      */
     public void flipDiagonalDiscs(final Integer rowValue,
                                   final Integer colValue, final DiscState currentPlayer) {
@@ -829,5 +830,9 @@ public class Board {
      */
     public Disc[][] getBoardGrid() {
         return boardGrid;
+    }
+
+    public void setBoardGrid(Disc[][] boardGrid) {
+        this.boardGrid = boardGrid;
     }
 }

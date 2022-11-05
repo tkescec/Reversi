@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="600.0" prefWidth="600.0" stylesheets="@../style/style.css" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hr.reversi.controller.HighScoreController">
+   <children>
+       <MenuBar minWidth="600.0" prefHeight="25.0">
+           <menus>
+               <Menu mnemonicParsing="false" text="File">
+                   <items>
+                       <MenuItem fx:id="miNewGame" mnemonicParsing="false" onAction="#onNewGameButtonClick" text="New Game" />
+                   </items>
+               </Menu>
+<!--               <Menu mnemonicParsing="false" text="High Score">-->
+<!--                   <items>-->
+<!--                       <MenuItem fx:id="miHighScore" mnemonicParsing="false" text="Show" />-->
+<!--                   </items>-->
+<!--               </Menu>-->
+               <Menu mnemonicParsing="false" text="Documentation">
+                   <items>
+                       <MenuItem fx:id="onDocumentationButtonClick" mnemonicParsing="false" text="Generate" />
+                   </items>
+               </Menu>
+           </menus>
+       </MenuBar>
+       <Label alignment="CENTER" layoutX="10.0" layoutY="45.0" prefHeight="59.0" prefWidth="580.0" text="High Score" textFill="WHITE">
+           <font>
+               <Font name="Agency FB Bold" size="48.0" />
+           </font>
+       </Label>
+       <ListView fx:id="listHighScore" layoutX="10.0" layoutY="130.0" prefHeight="460.0" prefWidth="580.0" />
+   </children>
+</AnchorPane>

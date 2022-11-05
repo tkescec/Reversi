@@ -1,6 +1,8 @@
 package hr.reversi.util;
 
-public enum DiscState {
+import java.io.Serializable;
+
+public enum DiscState implements Serializable {
     white,
     black,
     empty

@@ -24,3 +24,13 @@
 .stack-dark-green{
     -fx-background-color:#6f7d42;
 }
+
+.pan-white{
+    -fx-background-color:#FFFFFF;
+    -fx-text-fill: #000000;
+}
+
+.pan-black{
+    -fx-background-color:#000000;
+    -fx-text-fill: #FFFFFF;
+}
