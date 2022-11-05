@@ -328,6 +328,8 @@ public class BoardController implements Initializable {
                 board.getValidMoves(playerTurn);
 
                 updateBoardView();
+            } catch (FileNotFoundException e){
+                AlertService.showAlert(AlertType.error, e.getMessage());
             }
         } else {
             // ... user chose CANCEL or closed the dialog

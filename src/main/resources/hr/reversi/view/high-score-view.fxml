@@ -24,7 +24,7 @@
 <!--               </Menu>-->
                <Menu mnemonicParsing="false" text="Documentation">
                    <items>
-                       <MenuItem fx:id="onDocumentationButtonClick" mnemonicParsing="false" text="Generate" />
+                       <MenuItem fx:id="miDocumentation" mnemonicParsing="false" onAction="#onDocumentationButtonClick" text="Generate" />
                    </items>
                </Menu>
            </menus>
