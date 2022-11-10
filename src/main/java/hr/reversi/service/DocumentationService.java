@@ -5,11 +5,13 @@ import hr.reversi.util.AlertType;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
+import java.lang.reflect.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -18,87 +20,128 @@ public class DocumentationService {
 
     public static void generateDocumentation() {
 
-        File documentationFile = new File(pathName);
+        try (FileWriter fileWriter = new FileWriter(new File(pathName))) {
 
-        try {
+            List<Path> filesList = Files.walk(Path.of(".")).collect(Collectors.toList());
 
-            FileWriter writer = new FileWriter(documentationFile);
+            System.out.println("Files list:");
 
-            writer.write("<!DOCTYPE html>");
-            writer.write("<html>");
-            writer.write("<head>");
-            writer.write("<title>Project documentation</title>");
-            writer.write("</head>");
-            writer.write("<body>");
-            writer.write("<h1>Project documentation</h1>");
-            writer.write("<p>Class list:</p>");
-
-            List<Path> paths = Files.walk(Paths.get("."))
-                    .filter(path -> path.getFileName().toString().endsWith(".class"))
+            filesList = filesList.stream().filter(p ->
+                            (p.getFileName().toString().endsWith(".class")
+                                    && p.getFileName().toString().compareTo("module-info.class") != 0))
                     .collect(Collectors.toList());
 
-            for(Path path : paths) {
-                //System.out.println("Path: " + path);
-                String[] tokens = path.toString().split(Pattern.quote(System.getProperty("file.separator")));
+            List<String> fqnList = new ArrayList<>();
 
-                Boolean startBuildingPath = false;
+            for(Path path : filesList) {
+                System.out.println(path.toFile().getAbsolutePath().toString());
+                StringTokenizer tokenizer = new StringTokenizer(path.toFile().getAbsolutePath().toString(), "\\");
 
-                StringBuilder sb = new StringBuilder();
+                Boolean startJoining = false;
+                String fqn = "";
 
-                for(String token : tokens) {
-                    if("classes".equals(token)) {
-                        startBuildingPath = true;
+                while(tokenizer.hasMoreTokens()) {
+                    String newToken = tokenizer.nextToken();
+
+                    if("classes".equals(newToken)) {
+                        startJoining = true;
                         continue;
                     }
 
-                    if(startBuildingPath) {
+                    if(startJoining) {
 
-                        if(token.endsWith(".class")) {
-                            sb.append(token.substring(0, token.indexOf(".")));
+                        if(newToken.contains(".class")) {
+                            fqn += newToken.substring(0, newToken.lastIndexOf("."));
                         }
                         else {
-                            sb.append(token);
-                            sb.append(".");
+                            fqn += newToken + ".";
                         }
                     }
-                    else {
-                        continue;
-                    }
+
+                    System.out.println("Token: " + newToken);
                 }
 
-                if("module-info".equals(sb.toString())) {
-                    continue;
-                }
+                System.out.println("FQN: " + fqn);
 
-                System.out.println("Fully qualified name: " + sb.toString());
-
-                try {
-                    Class<?> clazz = Class.forName(sb.toString());
-
-                    writer.write("<h2>" + clazz.getName() + "</h2>");
-
-                    Constructor[] constructors = clazz.getConstructors();
-
-                    writer.write("<h3>Constructors:</h3>");
-
-                    for(Constructor c : constructors) {
-                        writer.write("<h4>Constructor:" + c.getName() + "</h4>");
-                    }
-
-                } catch (ClassNotFoundException e) {
-                    throw new RuntimeException(e);
-                }
-
-                //System.out.println("Tokens:");
-                //Arrays.stream(tokens).forEach(System.out::println);
+                fqnList.add(fqn);
             }
 
-            writer.write("</body>");
-            writer.write("</html>");
-            writer.close();
+            StringBuilder classInfo = new StringBuilder();
 
+            for(String fqn : fqnList) {
+                Class clazz = Class.forName(fqn);
+
+                classInfo.append("<section style='margin-bottom: 40px; border-bottom: solid 2px #333;'>");
+
+                classInfo.append("<h2 style='color:#ba6250; border-bottom: dotted 1px #ba6250;'>" + clazz.getSimpleName() + "</h2>");
+                classInfo.append("<h2 style='font-size:20px; margin-top:20px'>Fields:</h2>");
+
+                Field[] fields = clazz.getDeclaredFields();
+
+                for(Field field : fields) {
+                    classInfo.append("<h3 style='color:#298c47; padding-left: 30px'>" + Modifier.toString(field.getModifiers()) + " " + field.getName() + "</h3>");
+                }
+
+                classInfo.append("<h2 style='font-size:20px; margin-top:20px'>Constructors:</h2>");
+                Constructor[] constructors = clazz.getConstructors();
+
+
+                for(Constructor constructor : constructors) {
+
+                    String paramsString = "";
+
+                    for(int i = 0; i < constructor.getParameters().length; i++) {
+                        Parameter p = constructor.getParameters()[i];
+                        paramsString += Modifier.toString(p.getModifiers()) + " " + p.getType().getSimpleName()
+                                + " " + p.getName();
+
+                        if(i < (constructor.getParameters().length - 1)) {
+                            paramsString += ", ";
+                        }
+                    }
+
+                    classInfo.append("<h3 style='color:#322a7a; padding-left: 30px'>" + Modifier.toString(constructor.getModifiers()) + " " + constructor.getDeclaringClass().getSimpleName()
+                            + " (" + paramsString + ")</h3>");
+                }
+
+                classInfo.append("<h2 style='font-size:20px; margin-top:20px'>Methods:</h2>");
+                Method[] methods = clazz.getDeclaredMethods();
+
+                for(Method method : methods) {
+
+                    String paramsString = "";
+
+                    for(int i = 0; i < method.getParameters().length; i++) {
+                        Parameter p = method.getParameters()[i];
+                        paramsString += Modifier.toString(p.getModifiers()) + " " + p.getType().getSimpleName()
+                                + " " + p.getName();
+
+                        if(i < (method.getParameters().length - 1)) {
+                            paramsString += ", ";
+                        }
+                    }
+
+                    classInfo.append("<h3 style='color:#73216c; padding-left: 30px'>" + Modifier.toString(method.getModifiers()) + " " + method.getName()
+                            + " (" + paramsString + ")</h3>");
+                }
+
+                classInfo.append("</section>");
+            }
+
+            fileWriter.append("<!DOCTYPE html>")
+                    .append("<html>")
+                    .append("<head>")
+                    .append("<title>HTML Documentation</title>")
+                    .append("</head>")
+                    .append("<body>")
+                    .append("<h1 style='border-bottom:dashed 4px #507eba; color:#507eba; text-align: center'>Class list</h1>")
+                    .append(classInfo.toString())
+                    .append("</body>")
+                    .append("</html>");
         } catch (IOException e) {
             AlertService.showAlert(AlertType.error, "Error while generating documentation!");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
     }
 }
