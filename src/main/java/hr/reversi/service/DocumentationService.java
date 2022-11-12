@@ -8,11 +8,9 @@ import java.io.IOException;
 import java.lang.reflect.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class DocumentationService {
@@ -85,45 +83,12 @@ public class DocumentationService {
                 classInfo.append("<h2 style='font-size:20px; margin-top:20px'>Constructors:</h2>");
                 Constructor[] constructors = clazz.getConstructors();
 
-
-                for(Constructor constructor : constructors) {
-
-                    String paramsString = "";
-
-                    for(int i = 0; i < constructor.getParameters().length; i++) {
-                        Parameter p = constructor.getParameters()[i];
-                        paramsString += Modifier.toString(p.getModifiers()) + " " + p.getType().getSimpleName()
-                                + " " + p.getName();
-
-                        if(i < (constructor.getParameters().length - 1)) {
-                            paramsString += ", ";
-                        }
-                    }
-
-                    classInfo.append("<h3 style='color:#322a7a; padding-left: 30px'>" + Modifier.toString(constructor.getModifiers()) + " " + constructor.getDeclaringClass().getSimpleName()
-                            + " (" + paramsString + ")</h3>");
-                }
+                generateMethodsAndConstructors(constructors, classInfo);
 
                 classInfo.append("<h2 style='font-size:20px; margin-top:20px'>Methods:</h2>");
                 Method[] methods = clazz.getDeclaredMethods();
 
-                for(Method method : methods) {
-
-                    String paramsString = "";
-
-                    for(int i = 0; i < method.getParameters().length; i++) {
-                        Parameter p = method.getParameters()[i];
-                        paramsString += Modifier.toString(p.getModifiers()) + " " + p.getType().getSimpleName()
-                                + " " + p.getName();
-
-                        if(i < (method.getParameters().length - 1)) {
-                            paramsString += ", ";
-                        }
-                    }
-
-                    classInfo.append("<h3 style='color:#73216c; padding-left: 30px'>" + Modifier.toString(method.getModifiers()) + " " + method.getName()
-                            + " (" + paramsString + ")</h3>");
-                }
+                generateMethodsAndConstructors(methods, classInfo);
 
                 classInfo.append("</section>");
             }
@@ -142,6 +107,26 @@ public class DocumentationService {
             AlertService.showAlert(AlertType.error, "Error while generating documentation!");
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private static void generateMethodsAndConstructors(Executable[] executables, StringBuilder classInfo) {
+        for(Executable executable : executables) {
+
+            String paramsString = "";
+
+            for(int i = 0; i < executable.getParameters().length; i++) {
+                Parameter p = executable.getParameters()[i];
+                paramsString += Modifier.toString(p.getModifiers()) + " " + p.getType().getSimpleName()
+                        + " " + p.getName();
+
+                if(i < (executable.getParameters().length - 1)) {
+                    paramsString += ", ";
+                }
+            }
+
+            classInfo.append("<h3 style='color:#322a7a; padding-left: 30px'>" + Modifier.toString(executable.getModifiers()) + " " + executable.getDeclaringClass().getSimpleName()
+                    + " (" + paramsString + ")</h3>");
         }
     }
 }
