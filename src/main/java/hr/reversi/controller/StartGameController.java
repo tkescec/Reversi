@@ -16,16 +16,12 @@ import java.util.ResourceBundle;
 
 public class StartGameController implements Initializable {
     @FXML
-    private TextField playerOneNameTextField;
-    @FXML
     private TextField playerTwoNameTextField;
 
-    private static Player playerOne;
     private static Player playerTwo;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        playerOne = new Player();
         playerTwo = new Player();
     }
 
@@ -35,12 +31,7 @@ public class StartGameController implements Initializable {
     }
 
     private void initPlayers() {
-        String playerOneName = playerOneNameTextField.getText();
         String playerTwoName = playerTwoNameTextField.getText();
-
-        playerOne.setDiscState(DiscState.white);
-        playerOne.setName(playerOneName);
-        playerOne.setPoints(0);
 
         playerTwo.setDiscState(DiscState.black);
         playerTwo.setName(playerTwoName);
@@ -63,10 +54,6 @@ public class StartGameController implements Initializable {
         stage.setScene(scene);
         stage.centerOnScreen();
         stage.show();
-    }
-
-    public static Player getPlayerOne() {
-        return playerOne;
     }
 
     public static Player getPlayerTwo() {

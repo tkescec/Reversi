@@ -1,15 +1,13 @@
 package hr.reversi.controller;
 
 import hr.reversi.Main;
-import hr.reversi.model.Board;
-import hr.reversi.model.BoardState;
-import hr.reversi.model.Disc;
-import hr.reversi.model.Player;
+import hr.reversi.model.*;
 import hr.reversi.service.AlertService;
 import hr.reversi.service.DocumentationService;
 import hr.reversi.ui.DiscUI;
 import hr.reversi.util.AlertType;
 import hr.reversi.util.DiscState;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -18,6 +16,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
@@ -25,6 +24,7 @@ import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 
 import java.io.*;
+import java.net.Socket;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -47,6 +47,7 @@ public class BoardController implements Initializable {
     private GridPane boardGrid;
 
     private DiscUI discUi;
+    private Socket clientSocket;
     private static Board board;
     private static Player playerWhite;
     private static Player playerBlack;
@@ -55,6 +56,7 @@ public class BoardController implements Initializable {
     private final Boolean discMarker = true;
     private final Boolean moveMarker = true;
     private final String fileName = "reversi.ser";
+
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -66,29 +68,76 @@ public class BoardController implements Initializable {
         board = new Board();
         discUi = new DiscUI();
 
-        initPlayers();
-        initBoard();
-        initEventHandlers();
+        board.initBoard();
+        connectToServer();
+
     }
 
-    /** Init white and black player. */
-    private void initPlayers() {
-        Player playerOne = StartGameController.getPlayerOne();
-        Player playerTwo = StartGameController.getPlayerTwo();
+    private void connectToServer() {
+        // Closing socket will also close the socket's InputStream and OutputStream.
+        try{
+            clientSocket = new Socket(Server.HOST, Server.PORT);
 
-        playerWhite = playerOne.getDiscState() == DiscState.white ? playerOne : playerTwo;
-        playerBlack = playerOne.getDiscState() == DiscState.black ? playerOne : playerTwo;
+            System.err.println("Client is connecting to " + clientSocket.getInetAddress() + ":" +clientSocket.getPort());
 
-        playerWhite.setAllPlayedMoves(new ArrayList<Integer[]>());
+            initBlackPlayer();
+            setPlayerTurn(initPlayerTurn);
+
+            sendSerializableRequest(clientSocket);
+
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void sendSerializableRequest(Socket client) throws IOException, ClassNotFoundException {
+        ObjectOutputStream oos = new ObjectOutputStream(client.getOutputStream());
+        ObjectInputStream ois = new ObjectInputStream(client.getInputStream());
+
+        oos.writeObject(getBoardState());
+        System.out.println("Send data to server");
+
+        BoardState boardState = (BoardState)ois.readObject();
+        System.out.println("Retrive data from server");
+
+        removeOnGridClick();
+
+        if (playerWhite == null){
+            initWhitePlayer(boardState.getPlayerWhite());
+            initBoard();
+        } else {
+            playerTurn = boardState.getPlayerTurn();
+            board.setBoardGrid(boardState.getBoardGrid());
+            board.getValidMoves(playerTurn);
+
+            updateBoardView();
+        }
+
+        onGridClick();
+
+        if (playerTurn == DiscState.black){
+            boardState.setPlayerTurn(DiscState.white);
+            oos.writeObject(getBoardState());
+            System.out.println("Send data to server");
+        }
+    }
+
+    /** Init black player. */
+    private void initBlackPlayer() {
+        playerBlack = StartGameController.getPlayerTwo();
         playerBlack.setAllPlayedMoves(new ArrayList<Integer[]>());
-
-        lbPlayerWhiteName.setText(playerWhite.getName());
         lbPlayerBlackName.setText(playerBlack.getName());
+    }
+
+    /** Init white player. */
+    private void initWhitePlayer(Player player) {
+        playerWhite = player;
+        playerWhite.setAllPlayedMoves(player.getAllPlayedMoves());
+        lbPlayerWhiteName.setText(playerWhite.getName());
     }
 
     /** Init game board. */
     private void initBoard() {
-        setPlayerTurn(initPlayerTurn);
         board.initBoard();
         board.getValidMoves(playerTurn);
         updateBoardView();
@@ -255,6 +304,8 @@ public class BoardController implements Initializable {
             board.getValidMoves(playerTurn);
 
             updateBoardView();
+
+            sendSerializableRequest(clientSocket);
         }
     }
 
@@ -295,14 +346,20 @@ public class BoardController implements Initializable {
         showResultsView();
     }
 
-    /** Save game. */
-    private void saveGame() throws IOException, FileNotFoundException {
+    /** Get board state */
+    private BoardState getBoardState() {
         BoardState boardState = new BoardState();
 
         boardState.setBoardGrid(board.getBoardGrid());
         boardState.setPlayerTurn(playerTurn);
         boardState.setPlayerWhite(playerWhite);
         boardState.setPlayerBlack(playerBlack);
+
+        return boardState;
+    }
+    /** Save game. */
+    private void saveGame() throws IOException, FileNotFoundException {
+        BoardState boardState = getBoardState();
 
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fileName))) {
             oos.writeObject(boardState);
@@ -440,22 +497,37 @@ public class BoardController implements Initializable {
 
     // ************** EVENT HANDLERS **************
 
+    //Creating the mouse event handler
+    EventHandler<MouseEvent> eventHandler = new EventHandler<MouseEvent>() {
+        @Override
+        public void handle(MouseEvent event) {
+            Node node = (Node) event.getSource();
+            Integer col = boardGrid.getColumnIndex(node);
+            Integer row = boardGrid.getRowIndex(node);
+
+            try {
+                if (playerTurn == DiscState.black){
+                    runOnClick(row, col);
+                }
+            } catch (Exception e) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setContentText(e.getMessage().toString());
+                alert.show();
+            }
+        }
+    };
+
     /** Click handler for placed move. */
     private void onGridClick() {
         boardGrid.getChildren().forEach(square -> {
-            square.setOnMouseClicked(event -> {
-                Node node = (Node) event.getSource();
-                Integer col = boardGrid.getColumnIndex(node);
-                Integer row = boardGrid.getRowIndex(node);
+            square.addEventFilter(MouseEvent.MOUSE_CLICKED, eventHandler);
+        });
+    }
 
-                try {
-                    runOnClick(row, col);
-                } catch (Exception e) {
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setContentText(e.getMessage().toString());
-                    alert.show();
-                }
-            });
+    /** Click handler for placed move. */
+    private void removeOnGridClick() {
+        boardGrid.getChildren().forEach(square -> {
+            square.removeEventFilter(MouseEvent.MOUSE_CLICKED, eventHandler);
         });
     }
 
