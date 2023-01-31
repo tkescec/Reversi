@@ -2,6 +2,7 @@ package hr.reversi.controller;
 
 import hr.reversi.Main;
 import hr.reversi.model.*;
+import hr.reversi.rmi.server.ChatService;
 import hr.reversi.service.AlertService;
 import hr.reversi.service.DocumentationService;
 import hr.reversi.ui.DiscUI;
@@ -13,9 +14,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
@@ -26,7 +25,13 @@ import javafx.stage.Stage;
 import java.io.*;
 import java.net.Socket;
 import java.net.URL;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
@@ -45,6 +50,10 @@ public class BoardController implements Initializable {
     private Label lbPlayerBlackPoints;
     @FXML
     private GridPane boardGrid;
+    @FXML
+    private TextArea messages;
+    @FXML
+    private TextField message;
 
     private DiscUI discUi;
     private Socket clientSocket;
@@ -56,6 +65,7 @@ public class BoardController implements Initializable {
     private final Boolean discMarker = true;
     private final Boolean moveMarker = true;
     private final String fileName = "reversi.ser";
+    private ChatService stub = null;
 
 
     @Override
@@ -69,8 +79,42 @@ public class BoardController implements Initializable {
         discUi = new DiscUI();
 
         board.initBoard();
+        startChat();
         connectToServer();
 
+    }
+
+    private void startChat(){
+        try {
+            Registry registry = LocateRegistry.getRegistry("localhost", 1099);
+            stub = (ChatService) registry.lookup(ChatService.REMOTE_OBJECT_NAME);
+
+            new Thread(() ->  checkForNewMessages()).start();
+
+        } catch (RemoteException | NotBoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void checkForNewMessages(){
+        while (true){
+            try {
+                List<String> chatHistory = stub.getChatHistory();
+
+                StringBuilder chatHistoryBuilder = new StringBuilder();
+
+                for(String message : chatHistory) {
+                    chatHistoryBuilder.append(message);
+                    chatHistoryBuilder.append("\n");
+                }
+
+                messages.setText(chatHistoryBuilder.toString());
+                System.out.println("Check for messages at: " + LocalDateTime.now());
+                Thread.sleep(2000);
+            } catch (RemoteException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void connectToServer() {
@@ -529,6 +573,28 @@ public class BoardController implements Initializable {
         boardGrid.getChildren().forEach(square -> {
             square.removeEventFilter(MouseEvent.MOUSE_CLICKED, eventHandler);
         });
+    }
+
+    @FXML
+    /** Send message button click handler. */
+    private void onSendMessage() {
+        try {
+            stub.sendMessage(playerBlack.getName()
+                    + " > " + message.getText());
+
+            List<String> chatHistory = stub.getChatHistory();
+
+            StringBuilder chatHistoryBuilder = new StringBuilder();
+
+            for(String message : chatHistory) {
+                chatHistoryBuilder.append(message);
+                chatHistoryBuilder.append("\n");
+            }
+
+            messages.setText(chatHistoryBuilder.toString());
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @FXML

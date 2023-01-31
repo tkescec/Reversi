@@ -1,6 +1,7 @@
 module hr.reversi {
     requires javafx.controls;
     requires javafx.fxml;
+    requires java.rmi;
 
 
     opens hr.reversi to javafx.fxml;
