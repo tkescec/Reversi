@@ -592,6 +592,7 @@ public class BoardController implements Initializable {
             }
 
             messages.setText(chatHistoryBuilder.toString());
+            message.setText("");
         } catch (RemoteException e) {
             throw new RuntimeException(e);
         }
